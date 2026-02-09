@@ -48,6 +48,40 @@ require("umple-lsp").setup({
 | `[d` | Previous diagnostic |
 | `]d` | Next diagnostic |
 
+## Manual Setup (without lazy.nvim)
+
+If you don't use lazy.nvim, you can configure Neovim manually:
+
+### 1. Build the LSP server
+
+```bash
+git clone https://github.com/DraftTin/umple-lsp.git
+cd umple-lsp
+npm install
+npm run compile
+npm run download-jar
+```
+
+### 2. Add to your init.lua
+
+```lua
+dofile('/path/to/umple-lsp/editors/neovim/umple.lua')
+```
+
+Update `UMPLE_LSP_PATH` at the top of `umple.lua` to your actual path.
+
+### 3. Install tree-sitter parser and queries
+
+```bash
+ln -s /path/to/umple-lsp/packages/tree-sitter-umple/queries ~/.local/share/nvim/queries/umple
+```
+
+Then in Neovim:
+
+```vim
+:TSInstall umple
+```
+
 ## Features
 
 - **Diagnostics**: Real-time error and warning detection
