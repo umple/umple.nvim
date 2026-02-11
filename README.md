@@ -12,7 +12,7 @@ Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides
 
 ```lua
 {
-  'DraftTin/umple.nvim',
+  'umple/umple.nvim',
   build = './scripts/build.sh',
   dependencies = {
     'neovim/nvim-lspconfig',
@@ -126,4 +126,4 @@ Then in Neovim: `:LspRestart`
 
 ## How it works
 
-The build script clones the [umple-lsp](https://github.com/DraftTin/umple-lsp) monorepo into the plugin directory and compiles the LSP server. The plugin then points Neovim's LSP client at the compiled server.
+The build script clones the [umple-lsp](https://github.com/umple/umple-lsp) monorepo into the plugin directory and compiles the LSP server. The plugin then points Neovim's LSP client at the compiled server.

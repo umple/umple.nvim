@@ -12,7 +12,7 @@ if [ -d "$LSP_DIR/.git" ]; then
   git pull
 else
   echo "umple-lsp.nvim: cloning umple-lsp..."
-  git clone https://github.com/DraftTin/umple-lsp.git "$LSP_DIR"
+  git clone https://github.com/umple/umple-lsp.git "$LSP_DIR"
   cd "$LSP_DIR"
 fi
 
