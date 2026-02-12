@@ -6,7 +6,6 @@ Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides
 
 - Node.js 18+
 - Java 11+ (optional — only needed for diagnostics)
-- git
 
 ## Installation (lazy.nvim)
 
@@ -60,7 +59,7 @@ require("umple-lsp").setup({
 :Lazy update umple.nvim
 ```
 
-This pulls the latest plugin code and re-runs the build script (which updates the LSP server).
+This pulls the latest plugin code and re-runs the build script (which updates the LSP server and tree-sitter grammar).
 
 ## Development
 
@@ -74,7 +73,7 @@ workspace/
 └── umple.nvim/      # This plugin
 ```
 
-2. Build the server:
+2. Build the server locally:
 
 ```bash
 cd umple-lsp
@@ -83,15 +82,7 @@ npm run compile
 npm run download-jar
 ```
 
-3. Symlink the server into the plugin directory:
-
-```bash
-cd umple.nvim
-rm -rf umple-lsp
-ln -s ../umple-lsp umple-lsp
-```
-
-4. Point your Neovim config at the local clone. With lazy.nvim, use `dir` instead of the GitHub repo:
+3. Override the plugin's paths to use your local build:
 
 ```lua
 {
@@ -101,21 +92,25 @@ ln -s ../umple-lsp umple-lsp
     'nvim-treesitter/nvim-treesitter',
   },
   config = function()
-    require("umple-lsp").setup()
+    require("umple-lsp").setup({
+      plugin_dir = '/path/to/umple.nvim',
+    })
   end,
 }
 ```
 
-Without lazy.nvim, add to your `init.lua`:
+Then symlink the local server into the plugin's expected locations:
 
-```lua
-vim.opt.runtimepath:prepend("/path/to/umple.nvim")
-require("umple-lsp").setup()
+```bash
+cd umple.nvim
+# Symlink tree-sitter grammar
+ln -sf ../umple-lsp/packages/tree-sitter-umple tree-sitter-umple
+# Symlink local server into node_modules (jar is already inside packages/server/)
+mkdir -p node_modules
+ln -sf ../../umple-lsp/packages/server node_modules/umple-lsp-server
 ```
 
-Then run `:TSInstall umple` if you haven't already.
-
-5. After making changes to the server, recompile and restart:
+After making changes to the server, recompile and restart:
 
 ```bash
 cd umple-lsp
@@ -124,6 +119,8 @@ npm run compile
 
 Then in Neovim: `:LspRestart`
 
+Run `:TSInstall umple` if you haven't already.
+
 ## How it works
 
-The build script clones the [umple-lsp](https://github.com/umple/umple-lsp) monorepo into the plugin directory and compiles the LSP server. The plugin then points Neovim's LSP client at the compiled server.
+The build script installs the pre-compiled [umple-lsp-server](https://www.npmjs.com/package/umple-lsp-server) from npm, downloads `umplesync.jar` for diagnostics, and extracts the tree-sitter grammar (`src/parser.c` + `queries/`) from the [umple-lsp](https://github.com/umple/umple-lsp) repo for syntax highlighting via `:TSInstall umple`. The plugin then points Neovim's LSP client at the npm-installed server.

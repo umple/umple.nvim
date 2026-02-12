@@ -1,28 +1,25 @@
 #!/bin/sh
-# Clone or update the umple-lsp monorepo, then compile and download JAR.
+# Install the Umple LSP server from npm, download umplesync.jar,
+# and fetch the tree-sitter grammar files for :TSInstall.
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-LSP_DIR="$PLUGIN_DIR/umple-lsp"
+TS_DIR="$PLUGIN_DIR/tree-sitter-umple"
 
-if [ -d "$LSP_DIR/.git" ]; then
-  echo "umple-lsp.nvim: updating umple-lsp..."
-  cd "$LSP_DIR"
-  git pull
-else
-  echo "umple-lsp.nvim: cloning umple-lsp..."
-  git clone https://github.com/umple/umple-lsp.git "$LSP_DIR"
-  cd "$LSP_DIR"
-fi
+# 1. Install the pre-compiled LSP server from npm
+echo "umple-lsp.nvim: installing umple-lsp-server from npm..."
+npm install --prefix "$PLUGIN_DIR" umple-lsp-server
 
-echo "umple-lsp.nvim: installing dependencies..."
-npm install
-
-echo "umple-lsp.nvim: compiling..."
-npm run compile
-
+# 2. Download umplesync.jar (needed for diagnostics) into server package
 echo "umple-lsp.nvim: downloading umplesync.jar..."
-npm run download-jar
+curl -fSL -o "$PLUGIN_DIR/node_modules/umple-lsp-server/umplesync.jar" https://try.umple.org/scripts/umplesync.jar
+
+# 3. Fetch tree-sitter grammar (src/parser.c + queries/) for :TSInstall
+echo "umple-lsp.nvim: fetching tree-sitter grammar..."
+rm -rf "$TS_DIR"
+git clone --depth 1 https://github.com/umple/umple-lsp.git "$PLUGIN_DIR/_umple-lsp-tmp"
+mv "$PLUGIN_DIR/_umple-lsp-tmp/packages/tree-sitter-umple" "$TS_DIR"
+rm -rf "$PLUGIN_DIR/_umple-lsp-tmp"
 
 echo "umple-lsp.nvim: build complete"

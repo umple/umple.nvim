@@ -14,12 +14,14 @@ function M.setup(opts)
 		plugin_dir = vim.fn.fnamemodify(source, ":h:h:h")
 	end
 
-	local lsp_dir = plugin_dir .. "/umple-lsp"
-	local server_dir = lsp_dir .. "/packages/server"
-	local treesitter_dir = lsp_dir .. "/packages/tree-sitter-umple"
+	-- Server from npm, jar next to server package, tree-sitter extracted by build script
+	local server_dir = plugin_dir .. "/node_modules/umple-lsp-server"
+	local server_js = server_dir .. "/out/server.js"
+	local jar_path = server_dir .. "/umplesync.jar"
+	local treesitter_dir = plugin_dir .. "/tree-sitter-umple"
 
 	-- Check that the build step has run
-	if vim.fn.isdirectory(server_dir) == 0 then
+	if vim.fn.filereadable(server_js) == 0 then
 		vim.notify(
 			"umple-lsp.nvim: server not found. Run :Lazy build umple-lsp.nvim",
 			vim.log.levels.ERROR
@@ -38,7 +40,7 @@ function M.setup(opts)
 			default_config = {
 				cmd = {
 					"node",
-					server_dir .. "/out/server.js",
+					server_js,
 					"--stdio",
 				},
 				filetypes = { "umple" },
@@ -48,7 +50,7 @@ function M.setup(opts)
 				end,
 				single_file_support = true,
 				init_options = {
-					umpleSyncJarPath = server_dir .. "/umplesync.jar",
+					umpleSyncJarPath = jar_path,
 					umpleSyncPort = opts.port or 5556,
 				},
 			},
