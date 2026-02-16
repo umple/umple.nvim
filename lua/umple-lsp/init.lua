@@ -106,6 +106,16 @@ function M.setup(opts)
 		vim.fn.mkdir(install_dir .. "/queries", "p")
 		vim.fn.system({ "ln", "-s", queries_src, site_queries })
 	end
+
+	-- ------------------------------------------------------------------
+	-- 4. Enable tree-sitter highlighting for umple files
+	-- ------------------------------------------------------------------
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = "umple",
+		callback = function(args)
+			pcall(vim.treesitter.start, args.buf)
+		end,
+	})
 end
 
 return M
