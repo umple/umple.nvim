@@ -23,7 +23,7 @@ Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides
 }
 ```
 
-After installation, run `:TSInstall umple` to compile the tree-sitter parser for syntax highlighting.
+The tree-sitter parser for syntax highlighting is compiled automatically on first load.
 
 
 ## Configuration
@@ -119,8 +119,13 @@ npm run compile
 
 Then in Neovim: `:LspRestart`
 
-Run `:TSInstall umple` if you haven't already.
+To recompile the tree-sitter parser after grammar changes, delete the cached `.so` and restart Neovim:
+
+```bash
+rm -f ~/.local/share/nvim/site/parser/umple.so
+rm -rf ~/.local/share/nvim/site/queries/umple
+```
 
 ## How it works
 
-The build script installs the pre-compiled [umple-lsp-server](https://www.npmjs.com/package/umple-lsp-server) from npm, downloads `umplesync.jar` for diagnostics, and extracts the tree-sitter grammar (`src/parser.c` + `queries/`) from the [umple-lsp](https://github.com/umple/umple-lsp) repo for syntax highlighting via `:TSInstall umple`. The plugin then points Neovim's LSP client at the npm-installed server.
+The build script installs the pre-compiled [umple-lsp-server](https://www.npmjs.com/package/umple-lsp-server) from npm, downloads `umplesync.jar` for diagnostics, and extracts the tree-sitter grammar (`src/parser.c` + `queries/`) from the [umple-lsp](https://github.com/umple/umple-lsp) repo. The plugin compiles the tree-sitter parser automatically on first load (into `~/.local/share/nvim/site/parser/umple.so`) and points Neovim's LSP client at the npm-installed server.

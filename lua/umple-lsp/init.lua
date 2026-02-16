@@ -68,40 +68,43 @@ function M.setup(opts)
 	})
 
 	-- ------------------------------------------------------------------
-	-- 2. Tree-sitter parser registration
+	-- 2. Tree-sitter parser: compile and install the .so if needed
 	-- ------------------------------------------------------------------
-	local ts_ok, parser_config = pcall(function()
-		return require("nvim-treesitter.parsers").get_parser_configs()
-	end)
+	local parser_src = treesitter_dir .. "/src/parser.c"
+	local install_dir = vim.fn.stdpath("data") .. "/site"
+	local parser_dest = install_dir .. "/parser/umple.so"
 
-	if ts_ok then
-		parser_config.umple = {
-			install_info = {
-				url = treesitter_dir,
-				files = { "src/parser.c" },
-			},
-			filetype = "umple",
-		}
+	if vim.fn.filereadable(parser_src) == 1 and vim.fn.filereadable(parser_dest) == 0 then
+		-- Ensure parser directory exists
+		vim.fn.mkdir(install_dir .. "/parser", "p")
+
+		-- Compile parser.c into a shared library
+		local cc = vim.fn.exepath("cc") ~= "" and "cc" or "gcc"
+		local compile_cmd = string.format(
+			'%s -o "%s" -shared -fPIC -Os -I "%s/src" "%s"',
+			cc,
+			parser_dest,
+			treesitter_dir,
+			parser_src
+		)
+		local result = vim.fn.system(compile_cmd)
+		if vim.v.shell_error ~= 0 then
+			vim.notify("umple-lsp.nvim: failed to compile parser: " .. result, vim.log.levels.WARN)
+		end
 	end
 
+	-- Register umple filetype with treesitter
+	pcall(vim.treesitter.language.register, "umple", "umple")
+
 	-- ------------------------------------------------------------------
-	-- 3. Symlink queries automatically if not already present
+	-- 3. Symlink queries to the site directory
 	-- ------------------------------------------------------------------
 	local queries_src = treesitter_dir .. "/queries"
-	if vim.fn.isdirectory(queries_src) == 1 then
-		-- lazy.nvim treesitter location
-		local lazy_queries = vim.fn.stdpath("data") .. "/lazy/nvim-treesitter/queries/umple"
-		local lazy_parent = vim.fn.fnamemodify(lazy_queries, ":h")
-		if vim.fn.isdirectory(lazy_parent) == 1 and vim.fn.isdirectory(lazy_queries) == 0 then
-			vim.fn.system({ "ln", "-s", queries_src, lazy_queries })
-		end
+	local site_queries = install_dir .. "/queries/umple"
 
-		-- Standard neovim queries location
-		local std_queries = vim.fn.stdpath("data") .. "/queries/umple"
-		local std_parent = vim.fn.fnamemodify(std_queries, ":h")
-		if vim.fn.isdirectory(std_parent) == 1 and vim.fn.isdirectory(std_queries) == 0 then
-			vim.fn.system({ "ln", "-s", queries_src, std_queries })
-		end
+	if vim.fn.isdirectory(queries_src) == 1 and vim.fn.isdirectory(site_queries) == 0 then
+		vim.fn.mkdir(install_dir .. "/queries", "p")
+		vim.fn.system({ "ln", "-s", queries_src, site_queries })
 	end
 end
 
