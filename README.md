@@ -4,10 +4,33 @@ Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides
 
 ## Requirements
 
-- Node.js 18+
-- Java 11+ (optional — only needed for diagnostics)
+- [Neovim](https://neovim.io/) 0.9+ (0.10+ recommended)
+- [Node.js](https://nodejs.org/) 18+ (for running the LSP server)
+- A C compiler (`cc` or `gcc`) for compiling the tree-sitter parser
+- [Java](https://adoptium.net/) 11+ (optional — only needed for diagnostics)
+- A plugin manager — this guide uses [lazy.nvim](https://github.com/folke/lazy.nvim)
 
-## Installation (lazy.nvim)
+### Installing prerequisites
+
+**macOS** (via [Homebrew](https://brew.sh/)):
+```bash
+brew install neovim node
+brew install openjdk  # optional, for diagnostics
+```
+
+**Ubuntu/Debian**:
+```bash
+sudo apt install neovim nodejs npm build-essential
+sudo apt install default-jdk  # optional, for diagnostics
+```
+
+### Setting up lazy.nvim
+
+If you don't have a plugin manager yet, follow the [lazy.nvim installation guide](https://lazy.folke.io/installation).
+
+## Installation
+
+Add this to your lazy.nvim plugin list:
 
 ```lua
 {
@@ -23,8 +46,11 @@ Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides
 }
 ```
 
-The tree-sitter parser for syntax highlighting is compiled automatically on first load.
+The build script downloads the LSP server from npm and fetches the tree-sitter grammar. The tree-sitter parser is compiled automatically on first load — no manual steps needed.
 
+### Auto-completion (recommended)
+
+For auto-popup completion, install a completion plugin such as [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) with [cmp-nvim-lsp](https://github.com/hrsh7th/cmp-nvim-lsp). Without one, the LSP server still provides completions but you won't see them automatically.
 
 ## Configuration
 
@@ -48,10 +74,10 @@ require("umple-lsp").setup({
 
 ## Features
 
-- **Diagnostics**: Real-time error and warning detection
+- **Diagnostics**: Real-time error and warning detection (requires Java)
 - **Go-to-definition**: Jump to class, attribute, state definitions
 - **Code completion**: Context-aware keyword and symbol completion
-- **Syntax highlighting**: Via tree-sitter grammar
+- **Syntax highlighting**: Via [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammar (compiled automatically)
 
 ## Updating
 
@@ -60,6 +86,29 @@ require("umple-lsp").setup({
 ```
 
 This pulls the latest plugin code and re-runs the build script (which updates the LSP server and tree-sitter grammar).
+
+## Troubleshooting
+
+### No syntax highlighting
+
+The plugin compiles the tree-sitter parser on first load. If it fails:
+
+1. Make sure you have a C compiler: `cc --version` or `gcc --version`
+2. Delete the cached parser and restart Neovim to recompile:
+   ```bash
+   rm -f ~/.local/share/nvim/site/parser/umple.so
+   rm -rf ~/.local/share/nvim/site/queries/umple
+   ```
+
+### No diagnostics
+
+Diagnostics require Java 11+. Verify: `java -version`
+
+### LSP not starting
+
+1. Check that Node.js is installed: `node --version`
+2. Run `:LspLog` in Neovim to see server errors
+3. Rebuild the plugin: `:Lazy build umple.nvim`
 
 ## Development
 
