@@ -61,6 +61,10 @@ function M.setup(opts)
 		on_attach = opts.on_attach or function(client, bufnr)
 			local kopts = { buffer = bufnr, noremap = true, silent = true }
 			vim.keymap.set("n", "gd", vim.lsp.buf.definition, kopts)
+			vim.keymap.set("n", "gR", vim.lsp.buf.references, kopts)
+			vim.keymap.set("n", "K", vim.lsp.buf.hover, kopts)
+			vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, kopts)
+			vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, kopts)
 			vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, kopts)
 			vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, kopts)
 			vim.keymap.set("n", "]d", vim.diagnostic.goto_next, kopts)
@@ -74,7 +78,9 @@ function M.setup(opts)
 	local install_dir = vim.fn.stdpath("data") .. "/site"
 	local parser_dest = install_dir .. "/parser/umple.so"
 
-	if vim.fn.filereadable(parser_src) == 1 and vim.fn.filereadable(parser_dest) == 0 then
+	local needs_compile = vim.fn.filereadable(parser_src) == 1
+		and (vim.fn.filereadable(parser_dest) == 0 or vim.fn.getftime(parser_src) > vim.fn.getftime(parser_dest))
+	if needs_compile then
 		-- Ensure parser directory exists
 		vim.fn.mkdir(install_dir .. "/parser", "p")
 
