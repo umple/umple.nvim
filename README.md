@@ -75,7 +75,7 @@ require("umple-lsp").setup({
 ## Features
 
 - **Diagnostics**: Real-time error and warning detection (requires Java)
-- **Go-to-definition**: Jump to class, attribute, state definitions
+- **Go-to-definition**: Jump to classes, interfaces, traits, enums, attributes, methods, state machines, states, associations, mixsets, requirements, and `use` statements
 - **Code completion**: Context-aware keyword and symbol completion
 - **Syntax highlighting**: Via [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammar (compiled automatically)
 
@@ -163,12 +163,13 @@ After making changes to the server, recompile and restart:
 
 ```bash
 cd umple-lsp
-npm run compile
+npm run compile       # Server-only changes
+npm run build-grammar # After grammar.js changes (regenerates parser + WASM + compiles)
 ```
 
 Then in Neovim: `:LspRestart`
 
-To recompile the tree-sitter parser after grammar changes, delete the cached `.so` and restart Neovim:
+After grammar changes, also delete the cached native parser so Neovim recompiles it:
 
 ```bash
 rm -f ~/.local/share/nvim/site/parser/umple.so
