@@ -58,17 +58,7 @@ function M.setup(opts)
 	end
 
 	lspconfig.umple.setup({
-		on_attach = opts.on_attach or function(client, bufnr)
-			local kopts = { buffer = bufnr, noremap = true, silent = true }
-			vim.keymap.set("n", "gd", vim.lsp.buf.definition, kopts)
-			vim.keymap.set("n", "gR", vim.lsp.buf.references, kopts)
-			vim.keymap.set("n", "K", vim.lsp.buf.hover, kopts)
-			vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, kopts)
-			vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, kopts)
-			vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, kopts)
-			vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, kopts)
-			vim.keymap.set("n", "]d", vim.diagnostic.goto_next, kopts)
-		end,
+		on_attach = opts.on_attach,
 	})
 
 	-- ------------------------------------------------------------------
@@ -84,18 +74,30 @@ function M.setup(opts)
 		-- Ensure parser directory exists
 		vim.fn.mkdir(install_dir .. "/parser", "p")
 
-		-- Compile parser.c into a shared library
-		local cc = vim.fn.exepath("cc") ~= "" and "cc" or "gcc"
-		local compile_cmd = string.format(
-			'%s -o "%s" -shared -fPIC -Os -I "%s/src" "%s"',
-			cc,
-			parser_dest,
-			treesitter_dir,
-			parser_src
-		)
-		local result = vim.fn.system(compile_cmd)
-		if vim.v.shell_error ~= 0 then
-			vim.notify("umple-lsp.nvim: failed to compile parser: " .. result, vim.log.levels.WARN)
+		-- Pick the first available C compiler (clang preferred on macOS, gcc common on Linux)
+		local cc = nil
+		for _, candidate in ipairs({ "clang", "cc", "gcc" }) do
+			if vim.fn.exepath(candidate) ~= "" then
+				cc = candidate
+				break
+			end
+		end
+
+		if not cc then
+			vim.notify("umple-lsp.nvim: no C compiler found (tried clang, cc, gcc)", vim.log.levels.WARN)
+		else
+			-- Compile parser.c into a shared library
+			local compile_cmd = string.format(
+				'%s -o "%s" -shared -fPIC -Os -I "%s/src" "%s"',
+				cc,
+				parser_dest,
+				treesitter_dir,
+				parser_src
+			)
+			local result = vim.fn.system(compile_cmd)
+			if vim.v.shell_error ~= 0 then
+				vim.notify("umple-lsp.nvim: failed to compile parser: " .. result, vim.log.levels.WARN)
+			end
 		end
 	end
 
