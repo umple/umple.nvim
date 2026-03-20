@@ -1,6 +1,6 @@
 # umple.nvim
 
-Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides diagnostics, code completion, go-to-definition, and syntax highlighting for `.ump` files.
+Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides diagnostics, code completion, go-to-definition, find references, rename, hover, formatting, and syntax highlighting for `.ump` files.
 
 ## Requirements
 
@@ -63,21 +63,38 @@ require("umple-lsp").setup({
 })
 ```
 
-### Default keybindings
+### Keybindings
 
-| Key | Action |
-|-----|--------|
-| `gd` | Go to definition |
-| `<leader>e` | Show diagnostics float |
-| `[d` | Previous diagnostic |
-| `]d` | Next diagnostic |
+No keybindings are set by default — use `on_attach` to configure your own. Example:
+
+```lua
+require("umple-lsp").setup({
+  on_attach = function(client, bufnr)
+    local opts = { buffer = bufnr }
+    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+    vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
+    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+    vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+    vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, opts)
+    vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, opts)
+    vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
+    vim.keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
+  end,
+})
+```
 
 ## Features
 
 - **Diagnostics**: Real-time error and warning detection (requires Java)
 - **Go-to-definition**: Jump to classes, interfaces, traits, enums, attributes, methods, state machines, states, associations, mixsets, requirements, and `use` statements
+- **Find references**: Semantic reference search across all reachable files
+- **Rename**: Safe symbol rename across all references
+- **Hover**: Contextual information for symbols
 - **Code completion**: Context-aware keyword and symbol completion
+- **Document symbols**: Hierarchical outline (accessible via `:Telescope lsp_document_symbols` or similar)
+- **Formatting**: AST-driven indent correction, arrow spacing, blank-line normalization
 - **Syntax highlighting**: Via [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammar (compiled automatically)
+- **Cross-file support**: Transitive `use` statement resolution and cross-file diagnostics
 
 ## Updating
 
