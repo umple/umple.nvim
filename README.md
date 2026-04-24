@@ -5,7 +5,7 @@ Neovim plugin for the [Umple](https://www.umple.org) modeling language. Provides
 ## Requirements
 
 - [Neovim](https://neovim.io/) 0.9+ (0.10+ recommended)
-- [Node.js](https://nodejs.org/) 18+ (for running the LSP server)
+- [Node.js](https://nodejs.org/) 20+ (for running the LSP server; tested on 20 and 23)
 - A C compiler (`cc` or `gcc`) for compiling the tree-sitter parser
 - [Java](https://adoptium.net/) 11+ (optional — only needed for diagnostics)
 - A plugin manager — this guide uses [lazy.nvim](https://github.com/folke/lazy.nvim)
@@ -56,12 +56,13 @@ For auto-popup completion, install a completion plugin such as [nvim-cmp](https:
 
 ```lua
 require("umple-lsp").setup({
-  port = 5556,  -- UmpleSync port (default: 5556)
   on_attach = function(client, bufnr)
     -- your custom keybindings
   end,
 })
 ```
+
+> Earlier versions of this plugin documented a `port = 5556` option (passed to the server as `umpleSyncPort`). The current LSP server doesn't read it — diagnostics now spawn `umplesync.jar` as a subprocess per request, no socket. The option is harmlessly ignored if you set it.
 
 ### Keybindings
 
