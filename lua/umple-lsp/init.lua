@@ -109,10 +109,40 @@ function M.setup(opts)
 	-- ------------------------------------------------------------------
 	local queries_src = treesitter_dir .. "/queries"
 	local site_queries = install_dir .. "/queries/umple"
+	local queries_parent = install_dir .. "/queries"
 
-	if vim.fn.isdirectory(queries_src) == 1 and vim.fn.isdirectory(site_queries) == 0 then
-		vim.fn.mkdir(install_dir .. "/queries", "p")
-		vim.fn.system({ "ln", "-s", queries_src, site_queries })
+	local function normalize_path(path)
+		return vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
+	end
+
+	local function link_queries()
+		local result = vim.fn.system({ "ln", "-s", queries_src, site_queries })
+		if vim.v.shell_error ~= 0 then
+			vim.notify("umple-lsp.nvim: failed to link tree-sitter queries: " .. result, vim.log.levels.WARN)
+		end
+	end
+
+	if vim.fn.isdirectory(queries_src) == 1 then
+		vim.fn.mkdir(queries_parent, "p")
+
+		local uv = vim.uv or vim.loop
+		local stat = uv.fs_lstat(site_queries)
+		if not stat then
+			link_queries()
+		elseif stat.type == "link" then
+			local current = normalize_path(vim.fn.resolve(site_queries))
+			local expected = normalize_path(queries_src)
+			if current ~= expected then
+				uv.fs_unlink(site_queries)
+				link_queries()
+			end
+		elseif normalize_path(vim.fn.resolve(site_queries)) ~= normalize_path(queries_src) then
+			vim.notify(
+				"umple-lsp.nvim: tree-sitter query path already exists and is not managed by this plugin: "
+					.. site_queries,
+				vim.log.levels.WARN
+			)
+		end
 	end
 
 	-- ------------------------------------------------------------------
