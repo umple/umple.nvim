@@ -107,12 +107,25 @@ This pulls the latest plugin code and re-runs the build script (which updates th
 
 ## Troubleshooting
 
+### Parser, highlighting, and diagnostics
+
+Neovim uses two separate Umple checks:
+
+- Tree-sitter parser + queries: syntax highlighting, `:InspectTree`, and local parse shape. The cached native parser is `~/.local/share/nvim/site/parser/umple.so`; query files are linked at `~/.local/share/nvim/site/queries/umple`.
+- LSP diagnostics: compiler errors and warnings from `umplesync.jar`. These are the pink/red diagnostics such as `E1502`.
+
+A file can highlight and parse correctly in tree-sitter while still showing an `umplesync.jar` compiler diagnostic. In that case the LSP is working; the compiler is rejecting the Umple program.
+
 ### No syntax highlighting
 
 The plugin compiles the tree-sitter parser on first load. If it fails:
 
 1. Make sure you have a C compiler: `cc --version` or `gcc --version`
-2. Delete the cached parser and restart Neovim to recompile:
+2. Check that the query symlink points to this plugin:
+   ```bash
+   readlink ~/.local/share/nvim/site/queries/umple
+   ```
+3. Delete the cached parser and restart Neovim to recompile:
    ```bash
    rm -f ~/.local/share/nvim/site/parser/umple.so
    rm -rf ~/.local/share/nvim/site/queries/umple
@@ -187,7 +200,7 @@ npm run build-grammar # After grammar.js changes (regenerates parser + WASM + co
 
 Then in Neovim: `:LspRestart`
 
-After grammar changes, also delete the cached native parser so Neovim recompiles it:
+After grammar changes, also delete the cached native parser so Neovim recompiles it. The plugin repairs stale query symlinks on startup, but deleting the query path is still a useful reset when debugging local setup:
 
 ```bash
 rm -f ~/.local/share/nvim/site/parser/umple.so
@@ -196,4 +209,4 @@ rm -rf ~/.local/share/nvim/site/queries/umple
 
 ## How it works
 
-The build script installs the pre-compiled [umple-lsp-server](https://www.npmjs.com/package/umple-lsp-server) from npm, downloads `umplesync.jar` for diagnostics, and extracts the tree-sitter grammar (`src/parser.c` + `queries/`) from the [umple-lsp](https://github.com/umple/umple-lsp) repo. The plugin compiles the tree-sitter parser automatically on first load (into `~/.local/share/nvim/site/parser/umple.so`) and points Neovim's LSP client at the npm-installed server.
+The build script installs the pre-compiled [umple-lsp-server](https://www.npmjs.com/package/umple-lsp-server) from npm, downloads `umplesync.jar` for diagnostics, and extracts the tree-sitter grammar (`src/parser.c` + `queries/`) from the [umple-lsp](https://github.com/umple/umple-lsp) repo. The plugin compiles the tree-sitter parser automatically on first load (into `~/.local/share/nvim/site/parser/umple.so`), links query files into `~/.local/share/nvim/site/queries/umple`, and points Neovim's LSP client at the npm-installed server.
